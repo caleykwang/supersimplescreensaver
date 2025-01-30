@@ -2,7 +2,7 @@ Features:
 
 Fullscreen window that closes on any key press or mouse movement
 
-Automatic text sizing to fit the screen
+Automatic text sizing to fit the screen (wow binary search for best text size)
 
 Supports color names (e.g., "blue") and hex codes (e.g., "#FF0000")
 
