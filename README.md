@@ -12,4 +12,4 @@ Custom resolution support
 
 Example call:
 
-python screensaver.py --color white --resolution 1920x1080 --text "there is no silver bullet"
+python screensaver.py --color white --resolution 1920x1080 --text "there is no silver bullet" --font "Roman"
