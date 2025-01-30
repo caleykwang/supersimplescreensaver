@@ -7,6 +7,7 @@ def create_screensaver():
     parser.add_argument('--color', type=str, default='black', help='Background color (name or hex)')
     parser.add_argument('--resolution', type=str, default='800x600', help='Window resolution (e.g., 1920x1080)')
     parser.add_argument('--text', type=str, default='', help='Text to display')
+    parser.add_argument('--font', type=str, default='Arial', help='Font family to use (e.g., "MS Sans Serif", "Helvetica")')
     args = parser.parse_args()
 
     # Parse resolution
@@ -23,8 +24,14 @@ def create_screensaver():
     canvas = tk.Canvas(root, width=width, height=height, bg=args.color, highlightthickness=0)
     canvas.pack(expand=True, fill=tk.BOTH)
 
+    # Check available fonts
+    available_fonts = list(font.families())
+    if args.font not in available_fonts:
+        print(f"Font '{args.font}' not found! Available fonts: {available_fonts[:10]}...")
+        args.font = 'Arial'  # Fallback to default
+
     # Calculate text size
-    test_font = font.Font(family='Arial', size=12)
+    test_font = font.Font(family=args.font, size=12)
     min_size = 1
     max_size = 300
     padding = 20  # Add some padding
@@ -45,8 +52,8 @@ def create_screensaver():
             break
         optimal_size = size
 
-    # Create font with optimal size
-    final_font = font.Font(family='Arial', size=optimal_size)
+    # Create final font with selected family
+    final_font = font.Font(family=args.font, size=optimal_size)
     text_height = final_font.metrics("ascent") + final_font.metrics("descent")
 
     # Calculate vertical position
