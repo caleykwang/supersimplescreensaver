@@ -4,7 +4,7 @@ Fullscreen window that closes on any key press or mouse movement
 
 Automatic text sizing to fit the screen (wow binary search for best text size)
 
-Supports color names (e.g., "blue") and hex codes (e.g., "#FF0000")
+Supports color names and hex codes 
 
 Centered text display
 
