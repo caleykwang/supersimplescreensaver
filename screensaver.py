@@ -2,6 +2,19 @@ import tkinter as tk
 from tkinter import font
 import argparse
 
+# ---------- helpers ----------
+def enable_hidpi(root: tk.Tk) -> None:
+    """Make fonts crisp on HiDPI displays (Windows only)."""
+    if platform.system() == "Windows":
+        try:
+            from ctypes import windll
+            windll.shcore.SetProcessDpiAwareness(1)        # per-monitor v1
+        except Exception:
+            pass
+    # Convert between points and pixels accurately
+    dpi = root.winfo_fpixels("1i")  # how many pixels in one inch
+    root.tk.call("tk", "scaling", dpi / 72)                # 72 pt = 1 in ≈ 72 px
+    
 def create_screensaver():
     parser = argparse.ArgumentParser(description='Simple Screensaver Maker')
     parser.add_argument('--color', type=str, default='black', help='Background color (name or hex)')
