@@ -49,12 +49,22 @@ def main(argv=None):
     parser.add_argument("--textcolor", default=None,
                     help='Color of the text (name or hex). '
                          'If omitted, a readable color is chosen automatically.')
+    parser.add_argument("--mode",
+                    choices=("fullscreen", "borderless"),
+                    default="borderless",
+                    help="fullscreen = wm-managed; borderless = no title-bar/borders")
     args = parser.parse_args(argv)
 
     root = tk.Tk()
-        # ---------- after root = tk.Tk() ----------
-    root.overrideredirect(True)                           # no title-bar / borders
-    root.attributes("-topmost", True)                     # sit above task-bar/dock
+
+    if args.mode == "fullscreen":
+        root.attributes("-fullscreen", True)          # works fine on macOS/Linux/Win
+    else:
+        # borderless, covers primary monitor (or all if you kept --span-all code)
+        root.overrideredirect(True)
+        root.attributes("-topmost", True)
+        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+        root.geometry(f"{sw}x{sh}+0+0")              # sit above task-bar/dock
 
     # Explicitly size the window
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
