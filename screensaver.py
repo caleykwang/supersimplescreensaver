@@ -1,6 +1,14 @@
+#!/usr/bin/env python3
+"""
+Hi-DPI friendly fullscreen “screensaver”.
+  • DPI-aware on Windows (sharp fonts)
+  • Canvas auto-sized to real screen resolution
+  • True binary search for best font size
+  • Graceful fallback when requested family isn’t present
+"""
 import tkinter as tk
 from tkinter import font
-import argparse
+import argparse, sys, platform
 
 # ---------- helpers ----------
 def enable_hidpi(root: tk.Tk) -> None:
@@ -14,72 +22,65 @@ def enable_hidpi(root: tk.Tk) -> None:
     # Convert between points and pixels accurately
     dpi = root.winfo_fpixels("1i")  # how many pixels in one inch
     root.tk.call("tk", "scaling", dpi / 72)                # 72 pt = 1 in ≈ 72 px
-    
-def create_screensaver():
-    parser = argparse.ArgumentParser(description='Simple Screensaver Maker')
-    parser.add_argument('--color', type=str, default='black', help='Background color (name or hex)')
-    parser.add_argument('--resolution', type=str, default='800x600', help='Window resolution (e.g., 1920x1080)')
-    parser.add_argument('--text', type=str, default='', help='Text to display')
-    parser.add_argument('--font', type=str, default='Arial', help='Font family to use (e.g., "MS Sans Serif", "Helvetica")')
-    args = parser.parse_args()
 
-    # Parse resolution
-    width, height = map(int, args.resolution.split('x'))
+def best_font_size(text, family, screen_w, screen_h, padding=40, upper=800):
+    """Binary-search the largest font size that still fits."""
+    lo, hi = 1, upper
+    test = font.Font(family=family, size=lo)
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        test.configure(size=mid)
+        if (test.measure(text) <= screen_w - padding and
+            test.metrics("linespace") <= screen_h - padding):
+            lo = mid           # fits, try bigger
+        else:
+            hi = mid - 1       # too big, shrink
+    return lo
 
-    # Create window
+# ---------- main ----------
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Simple Screensaver Maker")
+    parser.add_argument("--color", default="black",
+                        help="Background color (name or hex)")
+    parser.add_argument("--text", default="",
+                        help="Text to display")
+    parser.add_argument("--font", default="Arial",
+                        help='Font family (e.g. "Segoe UI", "Helvetica")')
+    args = parser.parse_args(argv)
+
     root = tk.Tk()
+    enable_hidpi(root)                        # crisp rendering
+    root.attributes("-fullscreen", True)
     root.configure(bg=args.color)
-    root.attributes('-fullscreen', True)
-    root.bind('<Any-KeyPress>', lambda e: root.destroy())
-    root.bind('<Motion>', lambda e: root.destroy())
+    root.bind("<Any-KeyPress>", lambda _e: root.destroy())
+    root.bind("<Motion>",      lambda _e: root.destroy())
 
-    # Create canvas
-    canvas = tk.Canvas(root, width=width, height=height, bg=args.color, highlightthickness=0)
-    canvas.pack(expand=True, fill=tk.BOTH)
+    # Calculate real screen dimensions after scaling is active
+    root.update_idletasks()
+    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
 
-    # Check available fonts
-    available_fonts = list(font.families())
-    if args.font not in available_fonts:
-        print(f"Font '{args.font}' not found! Available fonts: {available_fonts[:10]}...")
-        args.font = 'Arial'  # Fallback to default
+    # Choose the font family (graceful fallback)
+    avail = set(font.families())
+    family = args.font if args.font in avail else "Arial"
+    if family != args.font:
+        print(f"⚠  Font “{args.font}” not found; using {family}", file=sys.stderr)
 
-    # Calculate text size
-    test_font = font.Font(family=args.font, size=12)
-    min_size = 1
-    max_size = 300
-    padding = 20  # Add some padding
+    size = best_font_size(args.text, family, sw, sh)
+    final_font = font.Font(family=family, size=size)
 
-    # Get screen dimensions
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
+    # Center vertically with correct baseline
+    linespace = final_font.metrics("linespace")
+    y = sh // 2
 
-    # Binary search for optimal font size
-    optimal_size = 12
-    for size in range(1, 300):
-        test_font.configure(size=size)
-        text_width = test_font.measure(args.text)
-        text_height = test_font.metrics("ascent") + test_font.metrics("descent")
-        
-        if text_width > (screen_width - padding) or text_height > (screen_height - padding):
-            optimal_size = size - 1
-            break
-        optimal_size = size
+    # Create a canvas the full size of the monitor
+    canvas = tk.Canvas(root, bg=args.color, highlightthickness=0)
+    canvas.pack(fill=tk.BOTH, expand=True)
 
-    # Create final font with selected family
-    final_font = font.Font(family=args.font, size=optimal_size)
-    text_height = final_font.metrics("ascent") + final_font.metrics("descent")
-
-    # Calculate vertical position
-    y_position = screen_height // 2 - text_height // 2 + final_font.metrics("ascent") // 2
-
-    # Create text
-    canvas.create_text(screen_width // 2, y_position, 
-                       text=args.text, 
-                       fill='black' if args.color.lower() == 'white' else 'white',
-                       font=final_font,
-                       anchor='center')
+    fg = "black" if args.color.lower() == "white" else "white"
+    canvas.create_text(sw // 2, y, text=args.text,
+                       fill=fg, font=final_font, anchor="c")
 
     root.mainloop()
 
-if __name__ == '__main__':
-    create_screensaver()
+if __name__ == "__main__":
+    main()
