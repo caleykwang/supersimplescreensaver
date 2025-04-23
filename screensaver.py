@@ -52,6 +52,13 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     root = tk.Tk()
+        # ---------- after root = tk.Tk() ----------
+    root.overrideredirect(True)                           # no title-bar / borders
+    root.attributes("-topmost", True)                     # sit above task-bar/dock
+
+    # Explicitly size the window
+    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+    root.geometry(f"{sw}x{sh}+0+0")         
     enable_hidpi(root)                        # crisp rendering
     root.attributes("-fullscreen", True)
     root.configure(bg=args.color)
