@@ -46,6 +46,9 @@ def main(argv=None):
                         help="Text to display")
     parser.add_argument("--font", default="Arial",
                         help='Font family (e.g. "Segoe UI", "Helvetica")')
+    parser.add_argument("--textcolor", default=None,
+                    help='Color of the text (name or hex). '
+                         'If omitted, a readable color is chosen automatically.')
     args = parser.parse_args(argv)
 
     root = tk.Tk()
@@ -76,9 +79,14 @@ def main(argv=None):
     canvas = tk.Canvas(root, bg=args.color, highlightthickness=0)
     canvas.pack(fill=tk.BOTH, expand=True)
 
-    fg = "black" if args.color.lower() == "white" else "white"
-    canvas.create_text(sw // 2, y, text=args.text,
-                       fill=fg, font=final_font, anchor="c")
+    fg = (args.textcolor or
+        ("black" if args.color.lower() == "white" else "white"))
+
+    canvas.create_text(sw // 2, y,
+                    text=args.text,
+                    fill=fg,
+                    font=final_font,
+                    anchor="c")
 
     root.mainloop()
 
