@@ -311,19 +311,20 @@ class ScreensaverApp:
         self.root = tk.Tk()
         self.root.title("Motivational Screensaver")
 
-        if args.mode == "fullscreen":
-            self.root.attributes("-fullscreen", True)
-        else:
-            self.root.overrideredirect(True)
-            self.root.attributes("-topmost", True)
-
         enable_hidpi(self.root)
         self.root.update_idletasks()
         self.sw = self.root.winfo_screenwidth()
         self.sh = self.root.winfo_screenheight()
         self.root.geometry(f"{self.sw}x{self.sh}+0+0")
-        self.root.attributes("-fullscreen", True)
         self.root.configure(bg=self.theme["bg_bottom"])
+
+        # Set fullscreen after window is configured
+        if args.mode == "fullscreen":
+            self.root.attributes("-topmost", True)
+            self.root.attributes("-fullscreen", True)
+        else:
+            self.root.overrideredirect(True)
+            self.root.attributes("-topmost", True)
 
         # ── Canvas ───────────────────────────────────────
         self.canvas = tk.Canvas(
@@ -707,8 +708,8 @@ Custom quotes file format (plain text, one quote per line):
         help="Shuffle quotes at launch",
     )
     parser.add_argument(
-        "--mode", choices=("fullscreen", "borderless"), default="borderless",
-        help="Window mode (default: borderless)",
+        "--mode", choices=("fullscreen", "borderless"), default="fullscreen",
+        help="Window mode (default: fullscreen)",
     )
 
     args = parser.parse_args(argv)
